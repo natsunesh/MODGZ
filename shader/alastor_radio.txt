@@ -1,4 +1,4 @@
-// Правильные униформы для Opera GX
+// shaders/alastor_radio.txt
 uniform shader iChunk;
 uniform float2 iChunkSize;
 uniform float iTick;
@@ -8,14 +8,18 @@ float random(float2 st) {
     return fract(sin(dot(st.xy, float2(12.9898,78.233))) * 43758.5453);
 }
 
-// Эффект "старое радио" 
+// Эффект "старое радио"
 half4 radioEffect(float2 uv) {
-    float noise = random(uv * iTick * 0.01);
+    // Базовый шум
+    float noise = random(uv * iTick * 0.05);
+    
+    // Горизонтальные полосы
     float scanLine = sin(uv.y * 800.0 + iTick * 0.1) * 0.1;
     
-    float r = random(uv + float2(iTick * 0.002, 0));
-    float g = random(uv + float2(iTick * 0.003, 0));
-    float b = random(uv + float2(iTick * 0.004, 0));
+    // Цветовые каналы со смещением
+    float r = random(uv + float2(iTick * 0.02, 0));
+    float g = random(uv + float2(iTick * 0.03, 0));
+    float b = random(uv + float2(iTick * 0.04, 0));
     
     return half4(r * 0.8, g * 0.3, b * 0.1, 1.0) * (0.5 + scanLine);
 }
@@ -29,13 +33,16 @@ half4 neonEffect(float2 uv) {
 }
 
 half4 main(float2 xy) {
+    // Получаем оригинальные пиксели
+    half4 original = iChunk.eval(xy);
+    
+    // Рассчитываем UV-координаты
     float2 uv = xy / iChunkSize;
     
-    // Смешиваем с оригинальной текстурой
-    half4 original = iChunk.eval(xy);
+    // Смешиваем эффекты
     half4 radio = radioEffect(uv);
     half4 neon = neonEffect(uv);
     
-    // Смешиваем эффекты с оригинальным изображением
-    return mix(original, radio * 0.8 + neon * 0.2, 0.3);
+    // Финальный цвет (50% оригинал + 50% эффекты)
+    return mix(original, saturate(radio * 0.8 + neon * 0.2), 0.5);
 }

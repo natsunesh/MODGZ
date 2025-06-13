@@ -114,7 +114,12 @@
             {
                 "alastor_radio":
                 {
-                    "path": "shaders/alastor_radio.sksl"
+                    "animation":
+                    {
+                        "duration": 60,
+                        "steps": 3600
+                    },
+                    "path": "shaders/alastor_radio.txt"
                 }
             },
             "theme":
