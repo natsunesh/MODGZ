@@ -1,32 +1,29 @@
-// shaders/alastor_radio.sksl
 uniform shader iChunk;
 uniform float2 iChunkSize;
 uniform float iTick;
 
 // Генератор шума для эффекта помех
-float random(vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453);
+float random(float2 st) {  // float2 вместо vec2
+    return fract(sin(dot(st.xy, float2(12.9898,78.233))) * 43758.5453);
 }
 
-// Основная функция шейдера
 half4 main(float2 xy) {
-    // Получаем UV-координаты
     float2 uv = xy / iChunkSize;
     
-    // Базовые эффекты (уменьшенная интенсивность)
-    float noise = random(uv * iTick * 0.02); // Медленнее
-    float scanLine = sin(uv.y * 400.0 + iTick * 0.05) * 0.05; // Меньше полос
+    // Базовые эффекты
+    float noise = random(uv * iTick * 0.02);
+    float scanLine = sin(uv.y * 400.0 + iTick * 0.05) * 0.05;
     
-    // Цветовые каналы (приглушённые цвета)
-    float r = random(uv + vec2(iTick * 0.015, 0)) * 0.4;
-    float g = random(uv + vec2(iTick * 0.02, 0)) * 0.2;
+    // Цветовые каналы
+    float r = random(uv + float2(iTick * 0.015, 0)) * 0.4;  // float2 вместо vec2
+    float g = random(uv + float2(iTick * 0.02, 0)) * 0.2;
     
-    // Неоновое свечение (уменьшенная интенсивность)
-    vec2 center = vec2(0.5);
+    // Неоновое свечение
+    float2 center = float2(0.5, 0.5);  // полный float2 вместо vec2(0.5)
     float dist = length(uv - center);
-    float glow = 0.01 / (dist + 0.2) * sin(iTick * 0.02); // Мягче
+    float glow = 0.01 / (dist + 0.2) * sin(iTick * 0.02);
     
-    // Смешивание с оригинальным изображением (больше оригинальных цветов)
+    // Смешивание с оригинальным изображением
     half4 original = iChunk.eval(xy);
     half4 effect = half4(
         r + glow * 0.3,
@@ -35,5 +32,5 @@ half4 main(float2 xy) {
         1.0
     );
     
-    return mix(original, effect, 0.25); // Меньше влияния эффектов
+    return mix(original, effect, 0.25);
 }
