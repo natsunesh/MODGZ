@@ -1,35 +1,39 @@
-// Используем стандартные униформы Opera GX
-uniform sampler2D iChunk;
-uniform vec2 iChunkSize;
+// shaders/alastor_radio.sksl
+uniform shader iChunk;
+uniform float2 iChunkSize;
 uniform float iTick;
 
 // Генератор шума для эффекта помех
-float random(float2 st) {
-    return fract(sin(dot(st.xy, float2(12.9898,78.233))) * 43758.5453);
+float random(vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453);
 }
 
-vec4 main(vec2 xy) {
+// Основная функция шейдера
+half4 main(float2 xy) {
     // Получаем UV-координаты
     float2 uv = xy / iChunkSize;
     
-    // Базовый шум с анимацией
+    // Базовые эффекты
     float noise = random(uv * iTick * 0.05);
-    
-    // Горизонтальные полосы (эффект старого ТВ)
     float scanLine = sin(uv.y * 800.0 + iTick * 0.1) * 0.1;
     
-    // Смещение цветовых каналов
-    float r = random(uv + float2(iTick * 0.02, 0));
-    float g = random(uv + float2(iTick * 0.03, 0));
+    // Цветовые каналы
+    float r = random(uv + vec2(iTick * 0.02, 0));
+    float g = random(uv + vec2(iTick * 0.03, 0));
     
     // Неоновое свечение
-    float2 center = float2(0.5, 0.5);
+    vec2 center = vec2(0.5);
     float dist = length(uv - center);
     float glow = 0.02 / dist * sin(iTick * 0.03);
     
-    // Смешиваем с оригинальным изображением
-vec4 original = texture(iChunk, xy);
-vec4 effect = vec4(r * 0.8, g * 0.3, glow * 0.5, 1.0);
+    // Смешивание с оригинальным изображением
+    half4 original = iChunk.eval(xy);
+    half4 effect = half4(
+        r * 0.8 + glow * 0.5,
+        g * 0.3 + glow * 0.2,
+        glow * 0.7,
+        1.0
+    );
     
-return mix(original, effect, 0.3);
+    return mix(original, effect, 0.4);
 }

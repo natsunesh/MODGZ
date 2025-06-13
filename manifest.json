@@ -119,6 +119,10 @@
                         "steps": 3600
                     },
                     "path": "shader/alastor_radio.txt"
+                },
+                "glitch":
+                {
+                    "path": "shader/v2"
                 }
             },
             "theme":
@@ -164,7 +168,7 @@
                 },
                 "light":
                 {
-                    "image": "wallpaper/video.webm",
+                    "image": "wallpaper/light.png",
                     "first_frame": "wallpaper/first_frame.jpeg",
                     "text_color": "#FFFFFF",
                     "text_shadow": "#0B000E"
@@ -173,5 +177,5 @@
         },
         "schema_version": 1
     },
-    "version": "1.0"
+    "version": "1.3"
 }
