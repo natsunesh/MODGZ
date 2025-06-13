@@ -13,27 +13,27 @@ half4 main(float2 xy) {
     // Получаем UV-координаты
     float2 uv = xy / iChunkSize;
     
-    // Базовые эффекты
-    float noise = random(uv * iTick * 0.05);
-    float scanLine = sin(uv.y * 800.0 + iTick * 0.1) * 0.1;
+    // Базовые эффекты (уменьшенная интенсивность)
+    float noise = random(uv * iTick * 0.02); // Медленнее
+    float scanLine = sin(uv.y * 400.0 + iTick * 0.05) * 0.05; // Меньше полос
     
-    // Цветовые каналы
-    float r = random(uv + vec2(iTick * 0.02, 0));
-    float g = random(uv + vec2(iTick * 0.03, 0));
+    // Цветовые каналы (приглушённые цвета)
+    float r = random(uv + vec2(iTick * 0.015, 0)) * 0.4;
+    float g = random(uv + vec2(iTick * 0.02, 0)) * 0.2;
     
-    // Неоновое свечение
+    // Неоновое свечение (уменьшенная интенсивность)
     vec2 center = vec2(0.5);
     float dist = length(uv - center);
-    float glow = 0.02 / dist * sin(iTick * 0.03);
+    float glow = 0.01 / (dist + 0.2) * sin(iTick * 0.02); // Мягче
     
-    // Смешивание с оригинальным изображением
+    // Смешивание с оригинальным изображением (больше оригинальных цветов)
     half4 original = iChunk.eval(xy);
     half4 effect = half4(
-        r * 0.8 + glow * 0.5,
-        g * 0.3 + glow * 0.2,
-        glow * 0.7,
+        r + glow * 0.3,
+        g + glow * 0.1,
+        glow * 0.4,
         1.0
     );
     
-    return mix(original, effect, 0.4);
+    return mix(original, effect, 0.25); // Меньше влияния эффектов
 }

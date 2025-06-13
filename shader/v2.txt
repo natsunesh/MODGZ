@@ -1,0 +1,32 @@
+// shaders/tv_noise.sksl
+uniform shader iChunk;
+uniform float2 iChunkSize;
+uniform float iTick;
+
+// Упрощённый генератор шума
+half snoise(half2 v) {
+    return fract(sin(dot(v, half2(12.9898,78.233))) * 43758.5453);
+}
+
+half4 main(float2 xy) {
+    half2 uv = xy / iChunkSize;
+    half time = iTick * 1.5;
+    
+    // Базовый шум
+    half noise = snoise(half2(time, uv.y * 0.3));
+    
+    // Смещение координат
+    half xpos = uv.x - noise * 0.1;
+    half4 color = iChunk.eval(half2(xpos * iChunkSize.x, xy.y));
+    
+    // Лёгкие цветовые искажения
+    color.g = mix(color.g, iChunk.eval(half2((xpos + 0.01) * iChunkSize.x, xy.y)).g, 0.2);
+    color.b = mix(color.b, iChunk.eval(half2((xpos - 0.01) * iChunkSize.x, xy.y)).b, 0.2);
+    
+    // Вертикальные полосы
+    if (mod(xy.y, 4.0) < 2.0) {
+        color.rgb *= 0.9 + snoise(half2(time, xy.y * 0.1)) * 0.1;
+    }
+    
+    return color;
+}
