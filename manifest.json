@@ -106,6 +106,11 @@
                     [
                         "https://*.opera.com/*"
                     ]
+                },
+                {
+                    "css": ["webmodding/opera.css"],
+                    "js": ["webmodding/close-effect.js"],
+                    "matches": ["<all_urls>"]
                 }
             ],
 
@@ -113,7 +118,7 @@
             {
                 "alastor_radio":
                 {
-                    
+
                     "path": "shaders/alastor_radio.sksl"
                 },
                 "glitch":
@@ -142,15 +147,15 @@
                 {
                     "gx_accent":
                     {
-                        "h": 30,
-                        "s": 100,
+                        "h": 10,
+                        "s": 80,
                         "l": 50
                     },
                     "gx_secondary_base":
                     {
-                        "h": 272,
-                        "s": 32,
-                        "l": 80
+                        "h": 30,
+                        "s": 30,
+                        "l": 95
                     }
                 }
             },
@@ -159,6 +164,7 @@
                 "dark":
                 {
                     "image": "wallpaper/dark.png",
+                    "second_frame": "wallpaper/second_frame.jpeg",
                     "text_color": "#FFFFFF",
                     "text_shadow": "#757575"
                 },
@@ -173,5 +179,5 @@
         },
         "schema_version": 1
     },
-    "version": "1.5"
+    "version": "1.6"
 }
