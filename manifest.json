@@ -116,7 +116,7 @@
 
             "shaders":
             {
-                "alastor_radio":
+                "alastor_tv":
                 {
 
                     "path": "shaders/alastor_radio.sksl"
@@ -179,5 +179,5 @@
         },
         "schema_version": 1
     },
-    "version": "1.7.1"
+    "version": "1.7.2"
 }

@@ -1,28 +1,41 @@
-// shaders/v2.sksl
+// shaders/alastor_tv.sksl
 uniform shader iChunk;
 uniform float2 iChunkSize;
 uniform float iTick;
 
-// Генератор шума
-float snoise(float2 v) {
-    return fract(sin(dot(v, float2(12.9898,78.233))) * 43758.5453);
+// Генератор простого шума
+float random(float2 st) {
+    return fract(sin(dot(st, float2(12.9898,78.233))) * 43758.5453);
 }
 
 half4 main(float2 xy) {
     float2 uv = xy / iChunkSize;
-    float time = iTick * 0.5; // Уменьшаем скорость анимации
-    
-    // Смещение координат с цикличностью
-    float xpos = fract(uv.x - snoise(float2(time, uv.y * 0.3)) * 0.1);
-    
-    // Получаем исходный цвет с учётом смещения
-    half4 color = iChunk.eval(float2(xpos * iChunkSize.x, xy.y));
-    
-    // Добавляем вертикальные полосы
-    if (fmod(xy.y, 4.0) < 2.0) {
-        color.rgb *= 0.9 + snoise(float2(time * 2.0, xy.y * 0.1)) * 0.1;
-    }
-    
-    // Смешиваем с оригиналом для плавности
-    return mix(iChunk.eval(xy), color, 0.3);
+    float time = iTick * 0.7;
+
+    // Эффект горизонтальных полос (scanlines)
+    float scanline = 0.92 + 0.08 * sin(uv.y * iChunkSize.y * 1.5 + time * 6.0);
+
+    // Лёгкое мерцание яркости (на весь экран)
+    float flicker = 0.97 + 0.03 * sin(time * 2.0 + uv.x * 10.0);
+
+    // Добавляем немного "шума" (помех)
+    float noise = random(uv * time) * 0.07;
+
+    // Получаем исходный цвет
+    half4 original = iChunk.eval(xy);
+
+    // Применяем эффекты
+    half4 result = original * scanline * flicker + noise;
+
+    // Лёгкое смещение цвета для ретро-стиля
+    result.r += 0.03 * sin(time + uv.y * 50.0);
+    result.g += 0.02 * sin(time + uv.x * 40.0);
+
+    // Усиливаем контраст
+    result.rgb = pow(result.rgb, float3(1.1, 1.1, 1.1));
+
+    // Гарантируем диапазон 0-1
+    result = clamp(result, 0.0, 1.0);
+
+    return result;
 }
