@@ -1,31 +1,28 @@
+// shaders/v2.sksl
 uniform shader iChunk;
 uniform float2 iChunkSize;
 uniform float iTick;
 
-// Упрощённый генератор шума
-float snoise(float2 v) {  // float вместо half
+// Генератор шума
+float snoise(float2 v) {
     return fract(sin(dot(v, float2(12.9898,78.233))) * 43758.5453);
 }
 
 half4 main(float2 xy) {
     float2 uv = xy / iChunkSize;
-    float time = iTick * 1.5;
+    float time = iTick * 0.5; // Уменьшаем скорость анимации
     
-    // Базовый шум
-    float noise = snoise(float2(time, uv.y * 0.3));
+    // Смещение координат с цикличностью
+    float xpos = fract(uv.x - snoise(float2(time, uv.y * 0.3)) * 0.1);
     
-    // Смещение координат
-    float xpos = uv.x - noise * 0.1;
+    // Получаем исходный цвет с учётом смещения
     half4 color = iChunk.eval(float2(xpos * iChunkSize.x, xy.y));
     
-    // Лёгкие цветовые искажения
-    color.g = mix(color.g, iChunk.eval(float2((xpos + 0.01) * iChunkSize.x, xy.y)).g, 0.2);
-    color.b = mix(color.b, iChunk.eval(float2((xpos - 0.01) * iChunkSize.x, xy.y)).b, 0.2);
-    
-    // Вертикальные полосы (используем fmod вместо mod)
+    // Добавляем вертикальные полосы
     if (fmod(xy.y, 4.0) < 2.0) {
-        color.rgb *= 0.9 + snoise(float2(time, xy.y * 0.1)) * 0.1;
+        color.rgb *= 0.9 + snoise(float2(time * 2.0, xy.y * 0.1)) * 0.1;
     }
     
-    return color;
+    // Смешиваем с оригиналом для плавности
+    return mix(iChunk.eval(xy), color, 0.3);
 }
