@@ -1,4 +1,4 @@
-// shaders/alastor_glitch.sksl
+// shaders/alastor_radio.sksl
 uniform shader iChunk;
 uniform float2 iChunkSize;
 uniform float iTick;

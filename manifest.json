@@ -37,10 +37,6 @@
                 [
                     "sound/hover.mp3"
                 ],
-                "HOVER_UP":
-                [
-                    "sound/hover.mp3"
-                ],
                 "IMPORTANT_CLICK":
                 [
                     "sound/important_click.mp3"
@@ -106,11 +102,6 @@
                     [
                         "https://*.opera.com/*"
                     ]
-                },
-                {
-                    "css": ["webmodding/opera.css"],
-                    "js": ["webmodding/close-effect.js"],
-                    "matches": ["<all_urls>"]
                 }
             ],
 
