@@ -104,18 +104,17 @@
                     ]
                 }
             ],
-
             "shaders":
             {
                 "alastor_tv":
                 {
-
                     "path": "shaders/alastor_radio.sksl"
                 },
                 "glitch":
                 {
                     "path": "shaders/v2.sksl"
                 }
+                
             },
             "theme":
             {
@@ -155,14 +154,12 @@
                 "dark":
                 {
                     "image": "wallpaper/dark.png",
-                    
                     "text_color": "#FFFFFF",
                     "text_shadow": "#757575"
                 },
                 "light":
                 {
                     "image": "wallpaper/light.png",
-                    
                     "text_color": "#FFFFFF",
                     "text_shadow": "#0B000E"
                 }
