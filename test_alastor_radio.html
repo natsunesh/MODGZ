@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Alastor Radio</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="shaderCanvas"></canvas>
+    <script type="module">
+        import { Skia } from 'https://unpkg.com/@shopify/skia-web@0.0.1/dist/skia-web.js';
+
+        async function main() {
+            const canvas = document.getElementById('shaderCanvas');
+            const skia = await Skia;
+            const surface = skia.MakeWebGLCanvasSurface(canvas);
+            const context = surface.getCanvas();
+
+            const shaderSource = `
+                // shaders/alastor_radio.sksl
+                uniform shader iChunk;
+                uniform float2 iChunkSize;
+                uniform float iTick;
+
+                // Classic Perlin 3D Noise (адаптированный под SkSL)
+                half4 permute(half4 x) { return fmod(((x*34.0)+1.0)*x, 289.0); }
+                half4 taylorInvSqrt(half4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+                float3 fade(float3 t) { return t*t*t*(t*(t*6.0-15.0)+10.0); }
+
+                float cnoise(float3 P) {
+                    float3 Pi0 = floor(P);
+                    float3 Pi1 = Pi0 + float3(1.0, 1.0, 1.0);
+                    Pi0 = fmod(Pi0, 289.0);
+                    Pi1 = fmod(Pi1, 289.0);
+                    float3 Pf0 = fract(P);
+                    float3 Pf1 = Pf0 - float3(1.0, 1.0, 1.0);
+
+                    half4 ix = half4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);
+                    half4 iy = half4(Pi0.y, Pi0.y, Pi1.y, Pi1.y);
+                    half4 iz0 = half4(Pi0.z, Pi0.z, Pi0.z, Pi0.z);
+                    half4 iz1 = half4(Pi1.z, Pi1.z, Pi1.z, Pi1.z);
+
+                    half4 ixy = permute(permute(ix) + iy);
+                    half4 ixy0 = permute(ixy + iz0);
+                    half4 ixy1 = permute(ixy + iz1);
+
+                    // ... (остальная часть функции cnoise упрощена для производительности)
+
+                    return sin(P.x * 12.9898 + P.y * 78.233 + P.z * 37.719) * 0.5 + 0.5;
+                }
+
+                // Симуляция FFT/Wave без аудио входа
+                float getSimulatedFFT(float x, float time) {
+                    return abs(sin(x * 20.0 + time * 3.0)) * 0.5 + 0.3;
+                }
+
+                float getSimulatedWave(float x, float time) {
+                    return sin(x * 15.0 + time * 2.0) * 0.8;
+                }
+
+                // Получение искажённого пикселя
+                half4 getDistortedPixel(float2 uv, float noiseFactor, float shiftFactor) {
+                    float noiseA = cnoise(float3(uv, noiseFactor));
+                    float noiseB = cnoise(float3(uv, noiseFactor + 10.0));
+
+                    float2 distortedUV = uv;
+                    distortedUV.x += shiftFactor * noiseA * 0.01;
+                    distortedUV.y += shiftFactor * noiseB * 0.01;
+
+                    return iChunk.eval(distortedUV * iChunkSize);
+                }
+
+                half4 main(float2 xy) {
+                    float2 uv = xy / iChunkSize;
+                    float time = iTick * 0.5;
+
+                    // Симуляция звуковых данных
+                    float fft = getSimulatedFFT(uv.x, time);
+                    float wave = getSimulatedWave(uv.x, time);
+
+                    // Расчёт силы искажения
+                    float shiftFactor = max((wave - 0.4), 0.0);
+                    shiftFactor += 1.0;
+                    shiftFactor *= shiftFactor;
+                    shiftFactor *= shiftFactor;
+                    shiftFactor -= 1.0;
+
+                    // RGB цветовое разделение с искажениями
+                    half4 pixelR = getDistortedPixel(uv, time * 0.1, shiftFactor);
+                    half4 pixelG = getDistortedPixel(uv, time * 0.1 + 10.0, shiftFactor);
+                    half4 pixelB = getDistortedPixel(uv, time * 0.1 + 20.0, shiftFactor);
+
+                    // Комбинирование каналов для эффекта глитча
+                    half4 result = half4(
+                        pixelR.r * (1.0 + fft * 0.5),
+                        pixelG.g * (1.0 + fft * 0.3),
+                        pixelB.b * (1.0 + fft * 0.2),
+                        1.0
+                    );
+
+                    // Смешивание с оригиналом
+                    half4 original = iChunk.eval(xy);
+                    return mix(original, result, 0.4 + wave * 0.2);
+                }
+            `;
+
+            const shader = skia.RuntimeEffect.Make(shaderSource);
+            const paint = new skia.Paint();
+            paint.setShader(shader.makeShader({
+                iChunk: skia.MakeShaderFromImage(context.makeImageSnapshot()),
+                iChunkSize: [canvas.width, canvas.height],
+                iTick: 0
+            }));
+
+            function render(time) {
+                const image = context.makeImageSnapshot();
+                paint.setShader(shader.makeShader({
+                    iChunk: skia.MakeShaderFromImage(image),
+                    iChunkSize: [canvas.width, canvas.height],
+                    iTick: time
+                }));
+                context.clear(skia.ColorWHITE);
+                context.drawPaint(paint);
+                surface.flushAndSubmit();
+                requestAnimationFrame(render);
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        main();
+    </script>
+</body>
+</html>

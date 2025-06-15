@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shader Test</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="shaderCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('shaderCanvas');
+        const gl = canvas.getContext('webgl2');
+
+        if (!gl) {
+            alert('WebGL 2 not supported');
+        }
+
+        const vertexShaderSource = `#version 300 es
+            in vec2 a_position;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+        `;
+
+        const fragmentShaderSource = `#version 300 es
+            precision highp float;
+            out vec4 fragColor;
+            uniform float iTime;
+            uniform vec2 iResolution;
+            uniform sampler2D iChunk;
+
+            // Include the shader code here
+            ${document.getElementById('shaderCode').textContent}
+        `;
+
+        function compileShader(gl, source, type) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const vertexShader = compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
+        const fragmentShader = compileShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER);
+
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            console.error(gl.getProgramInfoLog(program));
+        }
+
+        gl.useProgram(program);
+
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        const positions = [
+            -1, -1,
+            1, -1,
+            -1, 1,
+            -1, 1,
+            1, -1,
+            1, 1,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+        const iResolutionLocation = gl.getUniformLocation(program, 'iResolution');
+        const iTimeLocation = gl.getUniformLocation(program, 'iTime');
+
+        function resizeCanvasToDisplaySize(canvas) {
+            const displayWidth = canvas.clientWidth;
+            const displayHeight = canvas.clientHeight;
+            if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+                canvas.width = displayWidth;
+                canvas.height = displayHeight;
+            }
+        }
+
+        function render(time) {
+            resizeCanvasToDisplaySize(gl.canvas);
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            gl.uniform2f(iResolutionLocation, gl.canvas.width, gl.canvas.height);
+            gl.uniform1f(iTimeLocation, time * 0.001);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            requestAnimationFrame(render);
+        }
+
+        requestAnimationFrame(render);
+    </script>
+    <script id="shaderCode" type="x-shader/x-fragment">
+        // Include the shader code here
+        ${document.getElementById('shaderCode').textContent}
+    </script>
+</body>
+</html>

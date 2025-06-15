@@ -42,18 +42,17 @@ float rand(vec2 co) {
     return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-half4 main(float2 xy) {
-    vec2 uv = xy / iResolution.xy;
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord.xy / iResolution.xy;
     float time = iTime * 2.0;
     float noise = max(0.0, snoise(vec2(time, uv.y * 0.3)) - 0.3) * (1.0 / 0.7);
     noise = noise + (snoise(vec2(time * 10.0, uv.y * 2.4)) - 0.5) * 0.15;
     float xpos = uv.x - noise * noise * 0.25;
-    vec4 fragColor = iChunk.eval(vec2(xpos, uv.y));
+    fragColor = iChunk.eval(vec2(xpos, uv.y));
     fragColor.rgb = mix(fragColor.rgb, vec3(rand(vec2(uv.y * time))), noise * 0.3).rgb;
-    if (floor(mod(xy.y * 0.25, 2.0)) == 0.0) {
+    if (floor(mod(fragCoord.y * 0.25, 2.0)) == 0.0) {
         fragColor.rgb *= 1.0 - (0.15 * noise);
     }
     fragColor.g = mix(fragColor.r, iChunk.eval(vec2(xpos + noise * 0.05, uv.y)).g, 0.25);
     fragColor.b = mix(fragColor.r, iChunk.eval(vec2(xpos - noise * 0.05, uv.y)).b, 0.25);
-    return fragColor;
 }
