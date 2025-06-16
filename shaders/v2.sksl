@@ -1,6 +1,19 @@
+precision mediump float;
 uniform float iTime;
 uniform vec2 iResolution;
 uniform sampler2D iChannel0;
+
+vec3 mod289(vec3 x) { 
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec2 mod289(vec2 x) {
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec3 permute(vec3 x) {
+    return mod289(((x*34.0)+1.0)*x);
+}
 
 float snoise(vec2 v) {
     const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
@@ -29,52 +42,50 @@ float rand(vec2 co) {
     return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-void main(out vec4 fragColor, in vec2 fragCoord) {
+void main() {
+    vec2 fragCoord = gl_FragCoord.xy;
     vec2 uv = fragCoord.xy / iResolution.xy;
-    float time = iTime * 0.5;
+    float time = iTime * 0.7;
 
-    // Эффект переключения каналов
-    if (mod(iTime, 5.0) < 0.1) {
-        fragColor = vec4(
-            rand(uv * iTime),
-            rand(uv * iTime + 0.5),
-            rand(uv * iTime + 1.0),
+    // Эффект переключения каналов (более редкий)
+    if (mod(iTime, 8.0) < 0.2) {
+        gl_FragColor = vec4(
+            rand(uv * iTime * 1.5),
+            rand(uv * iTime + 0.7),
+            rand(uv * iTime + 2.0),
             1.0
         );
         return;
     }
 
-    // Дрожание сигнала
-    vec2 jitter = vec2(rand(vec2(time)) - 0.5, rand(vec2(time + 0.5)) - 0.5) * 0.005;
-    uv += jitter;
+    // Сильное дрожание сигнала
+    vec2 jitter = vec2(rand(vec2(time)) - 0.5, rand(vec2(time + 0.3)) - 0.5) * 0.01;
+    uv += jitter * (0.8 + sin(time * 5.0) * 0.2);
 
-    // Шумовые волны
-    float noise = max(0.0, snoise(vec2(time, uv.y * 0.3)) - 0.3) * (1.0 / 0.7);
-    noise += (snoise(vec2(time * 10.0, uv.y * 2.4)) - 0.5) * 0.15;
+    // Агрессивные шумовые волны
+    float noise = max(0.0, snoise(vec2(time * 1.5, uv.y * 0.5)) - 0.4) * (1.0 / 0.5);
+    noise += (snoise(vec2(time * 15.0, uv.y * 3.0)) - 0.5) * 0.25;
 
-    // Радиопомехи
-    float radio_distortion = sin(uv.y * 200.0 + time * 10.0) * 0.1;
-    float xpos = clamp(uv.x - noise * noise * 0.25 + radio_distortion, 0.001, 0.999);
+    // Хаотичные радиопомехи
+    float radio_distortion = sin(uv.y * 300.0 + time * 15.0) * 0.15;
+    float xpos = clamp(uv.x - noise * noise * 0.35 + radio_distortion, 0.001, 0.999);
 
-    // Основной цвет
-    vec4 texColor = texture(iChannel0, vec2(xpos, uv.y));
+    // Основной цвет с глубокими тенями
+    vec4 texColor = texture2D(iChannel0, vec2(xpos, uv.y));
+    
+    // Динамические сканирующие линии
+    float scan_line = sin(uv.y * 180.0 + time * 8.0) * 0.4 + 0.6;
+    texColor.rgb *= mix(scan_line, 1.0, smoothstep(0.7, 1.0, noise));
 
-    // Сканирующие линии
-    float scan_line = sin(uv.y * 150.0 + time * 5.0) * 0.3 + 0.7;
-    texColor.rgb *= mix(scan_line, 1.0, smoothstep(0.8, 1.0, noise));
-
-    // Случайные помехи
-    texColor.rgb = mix(texColor.rgb, vec3(rand(vec2(uv.y * time))), noise * 0.3).rgb;
-
-    // Цветное смещение
-    float chroma_offset = 0.02 * noise;
+    // Цветовое расслоение с переменным смещением
+    float chroma_offset = 0.03 * noise + sin(time * 2.0) * 0.01;
     vec3 channels;
     channels.r = texColor.r;
-    channels.g = texture(iChannel0, vec2(xpos + chroma_offset, uv.y)).g;
-    channels.b = texture(iChannel0, vec2(xpos - chroma_offset, uv.y)).b;
+    channels.g = texture2D(iChannel0, vec2(xpos + chroma_offset, uv.y)).g;
+    channels.b = texture2D(iChannel0, vec2(xpos - chroma_offset, uv.y)).b;
 
-    // Сепия и зернистость
-    float grain = rand(uv * time) * 0.1;
-    vec3 sepia = channels * vec3(1.0, 0.8, 0.6);
-    fragColor = vec4(mix(sepia, channels, 0.7) + grain, 1.0);
+    // Винтажный эффект с зелёным оттенком
+    vec3 vintage = channels * vec3(0.8, 1.0, 0.7);
+    float grain = rand(uv * time * 2.0) * 0.2;
+    gl_FragColor = vec4(mix(vintage, channels, 0.6) + grain, 1.0);
 }
