@@ -52,4 +52,10 @@ window.addEventListener('blur', () => {
   render();
 });
 
+// Example for dynamically changing shader parameters
+document.querySelector('.my-button').addEventListener('click', () => {
+  const shader = opera.modding.getShader('alastor_tv');
+  shader.setParam('u_Intensity', 0.5);
+});
+
 render();

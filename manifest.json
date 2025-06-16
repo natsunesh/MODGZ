@@ -104,18 +104,20 @@
                     ]
                 }
             ],
-            "shaders":
-            {
-                "alastor_tv":
+            "shaders": [
                 {
-                    "path": "shaders/alastor_radio.sksl"
+                    "name": "alastor_tv",
+                    "source": "resources/shaders/alastor_radio.sksl",
+                    "params": {
+                        "u_Intensity": 0.3,
+                        "u_ScanSpeed": 2.0
+                    }
                 },
-                "glitch":
                 {
-                    "path": "shaders/v2.sksl"
+                    "name": "glitch",
+                    "source": "resources/shaders/v2.sksl"
                 }
-                
-            },
+            ],
             "theme":
             {
                 "dark":
