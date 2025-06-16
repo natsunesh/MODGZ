@@ -107,15 +107,16 @@
             "shaders": [
                 {
                     "name": "alastor_tv",
-                    "source": "resources/shaders/alastor_radio.sksl",
-                    "params": {
+                    "source": "shaders/alastor_radio.sksl",
+                    "params": 
+                    {
                         "u_Intensity": 0.3,
                         "u_ScanSpeed": 2.0
                     }
                 },
                 {
                     "name": "glitch",
-                    "source": "resources/shaders/v2.sksl"
+                    "source": "shaders/v2.sksl"
                 }
             ],
             "theme":
