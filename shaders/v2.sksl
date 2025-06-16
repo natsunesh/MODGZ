@@ -1,3 +1,4 @@
+
 vec3 mod289(vec3 x) { 
     return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
@@ -37,7 +38,7 @@ float rand(vec2 co) {
     return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void main(out vec4 fragColor, in vec2 fragCoord) {
     vec2 uv = fragCoord.xy / iResolution.xy;
     float time = iTime * 0.5;
     

@@ -39,7 +39,7 @@ float rand(vec2 co) {
 return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void main(out vec4 gl_FragColor, in vec2 fragCoord) {
 vec2 uv = fragCoord.xy / iResolution.xy;
 float time = iTime * 2.0;
 
@@ -55,15 +55,15 @@ vec4 texColor = texture(iChannel0, vec2(xpos, uv.y));
 
 // Случайные помехи (исправлено присваивание)
 texColor.rgb = mix(texColor.rgb, vec3(rand(vec2(uv.y * time))), noise * 0.3);
-fragColor = texColor;
+gl_FragColor = texColor;
 
 // Паттерн линий
 if (floor(mod(fragCoord.y * 0.25, 2.0)) == 0.0) {
-fragColor.rgb *= 1.0 - (0.15 * noise);
+gl_FragColor.rgb *= 1.0 - (0.15 * noise);
 }
 
 // Смещение цветовых каналов (исправлено обращение к текстуре)
 float chroma_offset = 0.02 * noise;
-fragColor.g = mix(fragColor.r, texture(iChannel0, vec2(xpos + chroma_offset, uv.y)).g, 0.25);
-fragColor.b = mix(fragColor.r, texture(iChannel0, vec2(xpos - chroma_offset, uv.y)).b, 0.25);
+gl_FragColor.g = mix(gl_FragColor.r, texture(iChannel0, vec2(xpos + chroma_offset, uv.y)).g, 0.25);
+gl_FragColor.b = mix(gl_FragColor.r, texture(iChannel0, vec2(xpos - chroma_offset, uv.y)).b, 0.25);
 }
