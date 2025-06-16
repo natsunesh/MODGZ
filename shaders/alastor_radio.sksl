@@ -39,8 +39,20 @@ float rand(vec2 co) {
     return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
+uniform bool isActive;
+uniform float jitterAmount;
+uniform float noiseIntensity;
+uniform float radioDistortionIntensity;
+uniform float scanLineIntensity;
+uniform float grainIntensity;
+
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 uv = fragCoord.xy / iResolution.xy;
+    if (!isActive) {
+        fragColor = texture(iChannel0, fragCoord.xy / iResolution.xy);
+        return;
+    }
+
     float time = iTime * 0.5;
     
     // Эффект переключения каналов
@@ -55,22 +67,22 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     }
     
     // Дрожание сигнала
-    vec2 jitter = vec2(rand(vec2(time)) - 0.5, rand(vec2(time + 0.5)) - 0.5) * 0.005;
+    vec2 jitter = vec2(rand(vec2(time)) - 0.5, rand(vec2(time + 0.5)) - 0.5) * jitterAmount;
     uv += jitter;
     
     // Шумовые волны
-    float noise = max(0.0, snoise(vec2(time, uv.y * 0.3)) - 0.3) * (1.0 / 0.7);
+    float noise = max(0.0, snoise(vec2(time, uv.y * 0.3)) - 0.3) * noiseIntensity;
     noise += (snoise(vec2(time * 10.0, uv.y * 2.4)) - 0.5) * 0.15;
     
     // Радиопомехи
-    float radio_distortion = sin(uv.y * 200.0 + time * 10.0) * 0.1;
+    float radio_distortion = sin(uv.y * 200.0 + time * 10.0) * radioDistortionIntensity;
     float xpos = clamp(uv.x - noise * noise * 0.25 + radio_distortion, 0.001, 0.999);
     
     // Основной цвет
     vec4 texColor = texture(iChannel0, vec2(xpos, uv.y));
     
     // Сканирующие линии
-    float scan_line = sin(uv.y * 150.0 + time * 5.0) * 0.3 + 0.7;
+    float scan_line = sin(uv.y * 150.0 + time * 5.0) * scanLineIntensity + 0.7;
     texColor.rgb *= mix(scan_line, 1.0, smoothstep(0.8, 1.0, noise));
     
     // Случайные помехи
@@ -84,7 +96,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     channels.b = texture(iChannel0, vec2(xpos - chroma_offset, uv.y)).b;
     
     // Сепия и зернистость
-    float grain = rand(uv * time) * 0.1;
+    float grain = rand(uv * time) * grainIntensity;
     vec3 sepia = channels * vec3(1.0, 0.8, 0.6);
     fragColor = vec4(mix(sepia, channels, 0.7) + grain, 1.0);
 }
