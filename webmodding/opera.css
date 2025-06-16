@@ -8,10 +8,10 @@ body {
 
 /* For the entire interface */
 html {
-    filter: -opera-shader(url(resources/shaders/alastor_radio.sksl));
+    filter: -opera-shader(url(shaders/alastor_radio.sksl));
 }
 
-/* Or for specific elements */
-.gx-navbar {
-    filter: -opera-shader(url(resources/shaders/v2.sksl));
+/* Or for the new background class */
+.gx-background-layer {
+    filter: -opera-shader(url(shaders/alastor_radio.sksl));
 }
