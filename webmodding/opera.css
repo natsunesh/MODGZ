@@ -5,13 +5,3 @@ body {
     /* Three ways to use secondary (background) color */
     background: env(-opera-gx-background-color);
 }
-
-/* For the entire interface */
-html {
-    filter: -opera-shader(url(shaders/alastor_radio.sksl));
-}
-
-/* Or for the new background class */
-.gx-background-layer {
-    filter: -opera-shader(url(shaders/alastor_radio.sksl));
-}
